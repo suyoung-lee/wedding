@@ -1,0 +1,7 @@
+* text=auto eol=lf
+
+# QR 인쇄용 바이너리 — 절대 변환 금지
+*.png binary
+*.pdf binary
+*.eps binary
+*.svg text eol=lf
