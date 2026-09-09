@@ -243,13 +243,13 @@
      html.anim 은 <head> 인라인 스크립트가 붙입니다 — "동작 줄이기"를 켠
      기기나 구형 브라우저에는 안 붙어서 이 규칙 전체가 죽고 처음부터 다 보입니다. */
   html.anim :where(.page section > *:not(.grid), .page .grid .ph, .page footer > *){
-    opacity:0;transform:translateY(14px);
-    transition:opacity .55s ease, transform .6s cubic-bezier(.22,.61,.36,1);
+    opacity:0;transform:translateY(24px);
+    transition:opacity .6s ease, transform .65s cubic-bezier(.22,.61,.36,1);
   }
   /* 구분선은 떠오르는 대신 위에서 아래로 그어지듯 */
   html.anim :where(.page > .sep){
     transform:scaleY(0);transform-origin:top;
-    transition:transform .6s cubic-bezier(.22,.61,.36,1);
+    transition:transform .7s cubic-bezier(.22,.61,.36,1);
   }
   /* 표지는 스크롤이 아니라 로딩 직후에 (이름 -> 일시 순서로) */
   html.anim :where(.cover .caption, .cover .bottom){
@@ -575,18 +575,39 @@
   if (document.documentElement.classList.contains("anim")) {
     // CSS 의 :where(...) 목록과 같은 대상이어야 합니다. 한쪽만 고치지 마세요.
     var revealSel = ".page section > *:not(.grid), .page .grid .ph, .page footer > *, .page > .sep";
+
+    // 스크롤 속도(px/s). 휙 넘기는 중이면 시차를 빼서 화면이 비어 보이는 시간을 줄입니다.
+    // 천천히 볼 때만 촤르륵 이어지는 맛이 살아 있으면 됩니다.
+    var lastY = window.pageYOffset, lastT = Date.now(), speed = 0;
+    window.addEventListener("scroll", function () {
+      var now = Date.now(), dt = now - lastT;
+      if (dt > 0) {
+        speed = Math.abs(window.pageYOffset - lastY) / dt * 1000;
+        lastY = window.pageYOffset; lastT = now;
+      }
+    }, { passive: true });
+
     var io = new IntersectionObserver(function (entries, obs) {
+      var fast = speed > 1200;
       entries.filter(function (en) { return en.isIntersecting; })
         .sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; })
         .forEach(function (en, i) {
-          en.target.style.transitionDelay = Math.min(i, 5) * 55 + "ms";
+          en.target.style.transitionDelay = fast ? "0ms" : Math.min(i, 5) * 70 + "ms";
           en.target.classList.add("in");
           obs.unobserve(en.target);          // 한 번만. 되돌아와도 다시 사라지지 않게.
         });
-      // rootMargin: 화면 아래 12% 지점까지 미리 잡습니다. 빠르게 넘겨도 이미
-      // 떠오르는 중인 상태로 들어와서, 화면이 텅 비어 보이는 시간이 줄어듭니다.
-    }, { threshold: 0, rootMargin: "0px 0px 12% 0px" });
-    document.querySelectorAll(revealSel).forEach(function (t) { io.observe(t); });
+      // rootMargin 을 음수로 줘서 화면 아래 8% 선을 넘어야 켜집니다. 미리
+      // 켜면 떠오르는 과정이 화면 밖에서 끝나버려서, 이미 떠 있는 것만 보입니다.
+    }, { threshold: 0, rootMargin: "0px 0px -8% 0px" });
+    var pending = document.querySelectorAll(revealSel);
+    pending.forEach(function (t) { io.observe(t); });
+
+    // 안전장치: 페이지 맨 끝은 더 스크롤할 수 없어서 마지막 요소가 트리거 선까지
+    // 못 올라올 수 있습니다. 바닥에 닿으면 남은 것을 그냥 보여줍니다.
+    window.addEventListener("scroll", function () {
+      if (window.innerHeight + window.pageYOffset < document.body.scrollHeight - 2) return;
+      pending.forEach(function (t) { io.unobserve(t); t.classList.add("in"); });
+    }, { passive: true });
 
     // 표지는 첫 화면이라 스크롤을 기다릴 수 없으니 시간차로 띄웁니다.
     [".cover .caption", ".cover .bottom"].forEach(function (sel, i) {
