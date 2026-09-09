@@ -41,6 +41,8 @@ ORDER = [
     (B(""),    "아이보리 수트 - 신부"),
     (SOLO,     "아이보리 수트 - 신랑"),
     # 옐로 플라워
+    # ※ assets/g13.jpg 는 지금 이 파일이 아니라 따로 받은 보정본으로 교체돼 있습니다.
+    #    (앉은 컷). 다시 돌리면 아래 원본으로 되돌아가니 주의.
     (A("_02"), "옐로 플라워 - 두 사람"),
     (A("_11"), "옐로 플라워 - 신랑"),
     # 가든
@@ -51,6 +53,22 @@ ORDER = [
     (A("_09"), "가든 - 신부"),
     (A("_08"), "가든 - 신부"),
 ]
+
+# 썸네일 크롭 기준점 — 각 사진에서 얼굴(들)의 중심. 원본 대비 비율이라 해상도와 무관.
+# macOS Vision 얼굴 인식으로 뽑은 값입니다 (assets/gNN.jpg 기준). 이게 없으면 가운데를
+# 그냥 잘라서 전신컷의 머리가 잘려 나갑니다. 사진을 바꾸면 이 값도 같이 고치세요.
+#   재측정: swift tools/faces.swift assets/g*.jpg
+FACE = [
+    (0.569, 0.213), (0.508, 0.210), (0.435, 0.136), (0.259, 0.236), (0.342, 0.223),
+    (0.482, 0.212), (0.750, 0.188), (0.678, 0.360), (0.553, 0.299), (0.491, 0.243),
+    (0.479, 0.400), (0.495, 0.193), (0.520, 0.319), (0.423, 0.176), (0.511, 0.180),
+    (0.569, 0.187), (0.514, 0.513), (0.504, 0.280), (0.402, 0.352), (0.559, 0.192),
+]
+assert len(FACE) == len(ORDER), "FACE 와 ORDER 개수가 다릅니다"
+
+# 얼굴 무리의 중심이 크롭 위에서 이 지점에 오게 합니다. 0.5 면 얼굴이 정가운데라
+# 머리 위 여백이 답답해 보여서, 위쪽 1/3 즈음에 둡니다.
+HEADROOM = 0.36
 
 COVER = os.path.join(SRC, "KakaoTalk_20260909_232050635.png")   # 표지 — 아치 컷 보정본 (신부측 추천)
 COVER_CROP = (0.08, 0.0, 0.92, 1.0)          # (좌, 상, 우, 하) 비율. 보정본은 이미 타이트해서 좌우만 살짝
@@ -76,11 +94,14 @@ for i, (f, alt) in enumerate(ORDER, 1):
     manifest.append((name, alt, wide))
     # 그리드 썸네일: 정사각 400px (레퍼런스와 동일). 첫 장은 4:3 대표 1200x900 도 추가
     src = Image.open(f).convert("RGB")
+    fx, fy = FACE[i - 1]
     def _crop(im, ratio):
+        """얼굴이 가운데(세로는 위 1/3) 오도록 ratio 비율로 잘라냅니다."""
         w, h = im.size
-        if w / h > ratio:
-            nw = round(h * ratio); x = (w - nw) // 2; return im.crop((x, 0, x + nw, h))
-        nh = round(w / ratio); y = (h - nh) // 2; return im.crop((0, y, w, y + nh))
+        cw, ch = (w, w / ratio) if w / h <= ratio else (h * ratio, h)
+        x = min(max(fx * w - cw / 2, 0), w - cw)
+        y = min(max(fy * h - ch * HEADROOM, 0), h - ch)
+        return im.crop((round(x), round(y), round(x + cw), round(y + ch)))
     _crop(src, 1).resize((400, 400), Image.LANCZOS).save(os.path.join(OUT, f"t{i:02d}.jpg"), "JPEG", quality=82, optimize=True)
     total += os.path.getsize(os.path.join(OUT, f"t{i:02d}.jpg"))
     if i == 1:
