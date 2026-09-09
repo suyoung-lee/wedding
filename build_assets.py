@@ -54,10 +54,13 @@ ORDER = [
     (A("_08"), "가든 - 신부"),
 ]
 
-# 썸네일 크롭 기준점 — 각 사진에서 얼굴(들)의 중심. 원본 대비 비율이라 해상도와 무관.
-# macOS Vision 얼굴 인식으로 뽑은 값입니다 (assets/gNN.jpg 기준). 이게 없으면 가운데를
-# 그냥 잘라서 전신컷의 머리가 잘려 나갑니다. 사진을 바꾸면 이 값도 같이 고치세요.
-#   재측정: swift tools/faces.swift assets/g*.jpg
+# 크롭 기준점 — 각 사진에서 얼굴(들)의 중심. 원본 대비 비율이라 해상도와 무관.
+# macOS Vision 얼굴 인식으로 뽑은 값입니다. 이게 없으면 가운데를 그냥 잘라서
+# 전신컷의 머리가 잘려 나갑니다. 사진을 바꾸면 이 값도 같이 고치세요.
+#
+# ※ 반드시 ORDER 의 원본(imgs/) 기준으로 재세요. assets/gNN.jpg 는 이미 2:3 으로
+#    잘린 뒤라 좌표가 다릅니다. 아래 to_portrait 가 정규화 후 좌표로 알아서 바꿉니다.
+#   재측정: swift tools/faces.swift imgs/*.png
 FACE = [
     (0.569, 0.213), (0.508, 0.210), (0.435, 0.136), (0.259, 0.236), (0.342, 0.223),
     (0.482, 0.212), (0.750, 0.188), (0.678, 0.360), (0.553, 0.299), (0.491, 0.243),
@@ -70,6 +73,16 @@ assert len(FACE) == len(ORDER), "FACE 와 ORDER 개수가 다릅니다"
 # 머리 위 여백이 답답해 보여서, 위쪽 1/3 즈음에 둡니다.
 HEADROOM = 0.36
 
+# 세로 사진은 전부 이 비율로 맞춥니다. 원본이 2:3 부터 0.72:1 까지 제각각이라
+# 뷰어에서 좌우로 넘길 때 사진 틀이 들쭉날쭉했습니다. 정수배(2k x 3k)로 잘라서
+# 반올림 오차 없이 정확히 같은 비율로 떨어지게 합니다. 가로 사진(g01)은 제외.
+PORTRAIT = (2, 3)
+
+# 폭이 남아 잘라낼 때는 인물이 가운데 오도록 위치를 잡는데, 아래 두 장은
+# 예외입니다. 거울 컷이라 왼쪽 거울 + 오른쪽 아웃포커스 인물로 일부러 비대칭
+# 구도를 잡은 사진이어서, 가운데로 옮기면 구도가 무너집니다. (1부터 세는 번호)
+NO_RECENTER = {4, 5}
+
 COVER = os.path.join(SRC, "KakaoTalk_20260909_232050635.png")   # 표지 — 아치 컷 보정본 (신부측 추천)
 COVER_CROP = (0.08, 0.0, 0.92, 1.0)          # (좌, 상, 우, 하) 비율. 보정본은 이미 타이트해서 좌우만 살짝
 MAP_PDF = os.path.join(SRC, "[세인트 메리엘] 청첩장 약도 (1).pdf")
@@ -80,21 +93,39 @@ def save_jpg(im, path, max_w, quality=82):
     if im.width > max_w:
         h = round(im.height * max_w / im.width)
         im = im.resize((max_w, h), Image.LANCZOS)
+    # optimize+progressive: 화질은 그대로 두고 파일만 줄이는 무손실 재포장.
+    # (assets/ 를 직접 손볼 때는 jpegtran -optimize -progressive 가 같은 일을 합니다)
     im.save(path, "JPEG", quality=quality, optimize=True, progressive=True)
     return im.size, os.path.getsize(path)
+
+
+def to_portrait(im, fx, fy, recenter):
+    """세로 사진을 정확히 PORTRAIT 비율로 잘라내고, 새 사진 기준 얼굴 위치도 같이 돌려줍니다.
+       폭이 남으면 인물을 가운데로(recenter), 높이가 남으면 머리가 잘리지 않게 위쪽으로."""
+    num, den = PORTRAIT
+    w, h = im.size
+    k = min(w // num, h // den)
+    cw, ch = num * k, den * k
+    x = min(max(fx * w - cw / 2, 0), w - cw) if recenter else (w - cw) / 2
+    y = min(max(fy * h - ch * HEADROOM, 0), h - ch)
+    x, y = round(x), round(y)
+    return im.crop((x, y, x + cw, y + ch)), ((fx * w - x) / cw, (fy * h - y) / ch)
 
 
 total = 0
 manifest = []
 for i, (f, alt) in enumerate(ORDER, 1):
     name = f"g{i:02d}.jpg"
-    size, nbytes = save_jpg(Image.open(f), os.path.join(OUT, name), 900)
+    src = Image.open(f).convert("RGB")
+    fx, fy = FACE[i - 1]
+    if src.height > src.width:                      # 세로 사진만 비율을 맞춥니다
+        src, (fx, fy) = to_portrait(src, fx, fy, recenter=i not in NO_RECENTER)
+    size, nbytes = save_jpg(src, os.path.join(OUT, name), 900)
     total += nbytes
     wide = size[0] > size[1]
     manifest.append((name, alt, wide))
     # 그리드 썸네일: 정사각 400px (레퍼런스와 동일). 첫 장은 4:3 대표 1200x900 도 추가
-    src = Image.open(f).convert("RGB")
-    fx, fy = FACE[i - 1]
+    # (fx, fy 는 위에서 정규화 후 좌표로 갱신된 값)
     def _crop(im, ratio):
         """얼굴이 가운데(세로는 위 1/3) 오도록 ratio 비율로 잘라냅니다."""
         w, h = im.size
