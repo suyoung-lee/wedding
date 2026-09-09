@@ -1,0 +1,7 @@
+# 원본 사진 — 절대 커밋하지 말 것.
+# public 레포라서 올리는 순간 원본 해상도가 URL로 공개되고,
+# 사진 확대 방지가 아무 의미 없어집니다. 웹용은 build_assets.py 가 assets/ 로 만듭니다.
+imgs/
+
+__pycache__/
+*.pyc
