@@ -151,34 +151,41 @@
   }
   .dday{margin-top:22px;font-size:13px;color:var(--accent);letter-spacing:.02em}
 
-  /* ── 갤러리 (슬라이드) ───────────────────────────────────
-     탭·스와이프로 넘기되 확대는 계속 차단. 트랙이 스크롤 컨테이너라
-     body 의 touch-action 과 별개로 자체 값을 가집니다. */
-  .slider{margin:0 calc(var(--gutter) * -1)}
-  .track{
-    display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
-    -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
-    touch-action:pan-x pan-y;scrollbar-width:none;   /* pan-x 만 주면 사진 위에서 세로 스크롤이 막힘 */
+  /* ── 갤러리 (그리드 + 뷰어) ───────────────────────────────
+     레퍼런스 양식: 첫 장 가로 4:3 전폭 + 정사각 3열(간격 4px). 처음엔 7장만 보이고
+     "사진 더보기". 탭하면 뷰어가 열려 좌우로 넘겨봅니다. 핀치 확대는 뷰어 안에서도 차단. */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px}
+  .ph{display:block;width:100%;padding:0;border:0;background:#ece8e1;aspect-ratio:1;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .ph.wide{grid-column:1 / -1;aspect-ratio:4/3}
+  .ph img{width:100%;height:100%;object-fit:cover}
+  .grid.collapsed .ph:nth-child(n+8){display:none}
+  .more{
+    display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;margin-top:16px;padding:8px 0;
+    border:0;background:transparent;color:var(--ink-2);font-family:inherit;font-size:14px;font-weight:500;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;
   }
-  .track::-webkit-scrollbar{display:none}
-  .slide{flex:0 0 100%;scroll-snap-align:start;aspect-ratio:2/3;background:#ece8e1;overflow:hidden}
-  .slide img{width:100%;height:100%;object-fit:cover}
-  .slide.contain img{object-fit:contain}
-  /* 썸네일 목록 — 현재 사진은 잉크 테두리, 나머지는 흐리게. 넘길 때 현재 썸네일이 가운데로 옵니다.
-     .row 가 max-content + auto 마진이라, 사진을 추려 폭이 좁아지면 한 줄이 통째로 가운데 정렬됩니다. */
-  .thumbs{
-    position:relative;margin:8px calc(var(--gutter) * -1) 0;overflow-x:auto;
-    scrollbar-width:none;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+  .more .chev{width:9px;height:9px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg)}
+  .more:active{opacity:.6}
+  .more[hidden]{display:none}
+
+  .lb{
+    position:fixed;inset:0;z-index:40;background:rgba(28,25,21,.96);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,visibility .25s;touch-action:none;
   }
-  .thumbs::-webkit-scrollbar{display:none}
-  .thumbs .row{display:flex;gap:4px;width:max-content;margin:0 auto;padding:2px var(--gutter)}
-  .th{
-    flex:0 0 auto;width:64px;height:64px;padding:0;border:0;background:#ece8e1;position:relative;
-    cursor:pointer;-webkit-tap-highlight-color:transparent;opacity:.42;transition:opacity .2s;
-  }
-  .th img{width:100%;height:100%;object-fit:cover;display:block}
-  .th.on{opacity:1}
-  .th.on::after{content:"";position:absolute;inset:0;border:2px solid var(--ink);pointer-events:none}
+  .lb.open{opacity:1;visibility:visible;pointer-events:auto}
+  .lb .lbImg{width:auto;height:auto;max-width:calc(100% - 36px);max-height:82vh;max-height:82svh;object-fit:contain;opacity:0;transition:opacity .22s}
+  .lb .lbImg.ready{opacity:1}
+  .lbClose{position:absolute;top:10px;right:10px;width:46px;height:46px;border:0;background:none;color:rgba(255,255,255,.85);font-size:28px;line-height:1;cursor:pointer;font-family:inherit}
+  .lbNav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:72px;border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .lbNav.prev{left:0}
+  .lbNav.next{right:0}
+  .lbNav .chev{width:12px;height:12px;border-right:2px solid rgba(255,255,255,.8);border-bottom:2px solid rgba(255,255,255,.8)}
+  .lbNav.prev .chev{transform:rotate(135deg)}
+  .lbNav.next .chev{transform:rotate(-45deg)}
+  .lbClose:active,.lbNav:active{opacity:.5}
+  .lbCount{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.75);font-size:14px;letter-spacing:.12em;font-variant-numeric:tabular-nums}
+  body.lbOpen{overflow:hidden}
 
   /* ── 오시는 길 ───────────────────────────────────────────── */
   .mapWrap{display:block;margin-top:22px;border:1px solid var(--line);line-height:0;background:#fff}
@@ -186,8 +193,12 @@
   .addr{margin-top:22px;font-size:14px;line-height:1.7;color:var(--ink-2);word-break:keep-all}
   .addr .small{font-size:12.5px;color:var(--ink-3)}
   .addr a{color:inherit;text-decoration:none}
-  .loc .btnRow{margin-top:18px}
-  .loc .btnRow .btn{max-width:none}
+  .mapBtns{display:flex;gap:8px;margin-top:24px}
+  .mapBtns a{flex:1;display:flex;align-items:center;justify-content:center;height:52px;text-decoration:none;font-size:15px;font-weight:600;border-radius:2px;-webkit-tap-highlight-color:transparent}
+  .mapBtns .naver{background:var(--ink);color:#fff}
+  .mapBtns .kakao{border:1px solid var(--ink);color:var(--ink);background:#fff}
+  .mapBtns a:active{opacity:.8}
+  .addrCopy{display:inline-block;margin-top:12px;padding:0;border:0;background:none;font-family:inherit;font-size:12.5px;color:var(--ink-3);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 
   /* 아코디언 — 박스 없이 가는 선으로만 */
   .acc{margin-top:30px;border-top:1px solid var(--line);text-align:left}
@@ -310,54 +321,29 @@
   <!-- ══════════ 갤러리 ══════════ -->
   <section>
     <p class="label">Gallery</p>
-    <div class="slider">
-      <div class="track noSave" id="track">
-        <div class="slide"><img src="assets/g01.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img src="assets/g02.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g03.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g04.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g05.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide contain"><img data-src="assets/g06.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g07.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g08.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g09.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g10.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g11.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g12.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g13.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g14.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g15.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g16.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g17.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g18.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g19.jpg" alt="웨딩 사진" draggable="false"></div>
-        <div class="slide"><img data-src="assets/g20.jpg" alt="웨딩 사진" draggable="false"></div>
-      </div>
+    <div class="grid collapsed noSave" id="grid">
+      <button class="ph wide" type="button" data-full="assets/g01.jpg" aria-label="웨딩 사진 1번, 크게 보기"><img src="assets/wide.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g02.jpg" aria-label="웨딩 사진 2번, 크게 보기"><img src="assets/t02.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g03.jpg" aria-label="웨딩 사진 3번, 크게 보기"><img src="assets/t03.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g04.jpg" aria-label="웨딩 사진 4번, 크게 보기"><img src="assets/t04.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g05.jpg" aria-label="웨딩 사진 5번, 크게 보기"><img src="assets/t05.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g06.jpg" aria-label="웨딩 사진 6번, 크게 보기"><img src="assets/t06.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g07.jpg" aria-label="웨딩 사진 7번, 크게 보기"><img src="assets/t07.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g08.jpg" aria-label="웨딩 사진 8번, 크게 보기"><img src="assets/t08.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g09.jpg" aria-label="웨딩 사진 9번, 크게 보기"><img src="assets/t09.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g10.jpg" aria-label="웨딩 사진 10번, 크게 보기"><img src="assets/t10.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g11.jpg" aria-label="웨딩 사진 11번, 크게 보기"><img src="assets/t11.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g12.jpg" aria-label="웨딩 사진 12번, 크게 보기"><img src="assets/t12.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g13.jpg" aria-label="웨딩 사진 13번, 크게 보기"><img src="assets/t13.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g14.jpg" aria-label="웨딩 사진 14번, 크게 보기"><img src="assets/t14.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g15.jpg" aria-label="웨딩 사진 15번, 크게 보기"><img src="assets/t15.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g16.jpg" aria-label="웨딩 사진 16번, 크게 보기"><img src="assets/t16.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g17.jpg" aria-label="웨딩 사진 17번, 크게 보기"><img src="assets/t17.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g18.jpg" aria-label="웨딩 사진 18번, 크게 보기"><img src="assets/t18.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g19.jpg" aria-label="웨딩 사진 19번, 크게 보기"><img src="assets/t19.jpg" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="assets/g20.jpg" aria-label="웨딩 사진 20번, 크게 보기"><img src="assets/t20.jpg" alt="" loading="lazy"></button>
     </div>
-    <div class="thumbs noSave" id="thumbs">
-      <div class="row">
-        <button class="th" type="button" data-i="0" aria-label="1번째 사진"><img src="assets/t01.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="1" aria-label="2번째 사진"><img src="assets/t02.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="2" aria-label="3번째 사진"><img src="assets/t03.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="3" aria-label="4번째 사진"><img src="assets/t04.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="4" aria-label="5번째 사진"><img src="assets/t05.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="5" aria-label="6번째 사진"><img src="assets/t06.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="6" aria-label="7번째 사진"><img src="assets/t07.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="7" aria-label="8번째 사진"><img src="assets/t08.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="8" aria-label="9번째 사진"><img src="assets/t09.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="9" aria-label="10번째 사진"><img src="assets/t10.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="10" aria-label="11번째 사진"><img src="assets/t11.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="11" aria-label="12번째 사진"><img src="assets/t12.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="12" aria-label="13번째 사진"><img src="assets/t13.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="13" aria-label="14번째 사진"><img src="assets/t14.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="14" aria-label="15번째 사진"><img src="assets/t15.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="15" aria-label="16번째 사진"><img src="assets/t16.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="16" aria-label="17번째 사진"><img src="assets/t17.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="17" aria-label="18번째 사진"><img src="assets/t18.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="18" aria-label="19번째 사진"><img src="assets/t19.jpg" alt="" loading="lazy" draggable="false"></button>
-        <button class="th" type="button" data-i="19" aria-label="20번째 사진"><img src="assets/t20.jpg" alt="" loading="lazy" draggable="false"></button>
-      </div>
-    </div>
+    <button class="more" type="button" id="more">사진 더보기<span class="chev" aria-hidden="true"></span></button>
   </section>
 
   <div class="sep"></div>
@@ -378,11 +364,11 @@
       <span class="small">(역삼동 828-10) &nbsp;·&nbsp; <a href="tel:0225383300">02-538-3300</a></span>
     </p>
 
-    <div class="btnRow">
-      <a class="btn" href="https://naver.me/F3EAzV2I" target="_blank" rel="noopener">네이버지도</a>
-      <a class="btn" href="https://map.kakao.com/?q=%EC%84%B8%EC%9D%B8%ED%8A%B8%EB%A9%94%EB%A6%AC%EC%97%98" target="_blank" rel="noopener">카카오맵</a>
-      <button class="btn" type="button" data-copy="서울 강남구 논현로79길 72 올림피아센터 빌딩">주소 복사</button>
+    <div class="mapBtns">
+      <a class="naver" href="https://naver.me/F3EAzV2I" target="_blank" rel="noopener">네이버 지도</a>
+      <a class="kakao" href="https://map.kakao.com/?q=%EC%84%B8%EC%9D%B8%ED%8A%B8%EB%A9%94%EB%A6%AC%EC%97%98" target="_blank" rel="noopener">카카오맵</a>
     </div>
+    <button class="addrCopy" type="button" data-copy="서울 강남구 논현로79길 72 올림피아센터 빌딩">주소 복사</button>
 
     <div class="acc">
       <details>
@@ -468,6 +454,14 @@
 
 </div>
 
+<div class="lb noSave" id="lb" role="dialog" aria-modal="true" aria-label="사진 크게 보기">
+  <img class="lbImg" id="lbImg" alt="">
+  <button class="lbClose" id="lbClose" type="button" aria-label="닫기">&times;</button>
+  <button class="lbNav prev" id="lbPrev" type="button" aria-label="이전 사진"><span class="chev" aria-hidden="true"></span></button>
+  <button class="lbNav next" id="lbNext" type="button" aria-label="다음 사진"><span class="chev" aria-hidden="true"></span></button>
+  <span class="lbCount" id="lbCount"></span>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -501,47 +495,46 @@
     if (el && !el.classList.contains("mapWrap")) e.preventDefault();
   });
 
-  /* ── 갤러리 슬라이더 ──
-     탭 감지는 pointer 이벤트로 합니다. 위의 더블탭 차단이 touchend 를 취소하면
-     click 이 안 오지만, pointerup 은 그보다 먼저 발생해 영향을 받지 않습니다.
-     지연로딩은 scroll 이벤트에만 기대지 않고 go() 에서도 직접 맞춥니다. */
-  var track = document.getElementById("track");
-  var slides = track.children, n = slides.length;
-  var current = 0;                         // 목표 인덱스. 애니메이션 중 연타해도 여기서 이어감
-  function load(i) {
-    var s = slides[(i + n) % n], im = s && s.querySelector("img[data-src]");
-    if (im) { im.src = im.getAttribute("data-src"); im.removeAttribute("data-src"); }
+  /* ── 갤러리 그리드 + 뷰어 ── */
+  var grid = document.getElementById("grid");
+  var phs = grid.querySelectorAll(".ph");
+  var FULL = Array.prototype.map.call(phs, function (b) { return b.getAttribute("data-full"); });
+  var n = FULL.length, cur = 0;
+  var lb = document.getElementById("lb"), lbImg = document.getElementById("lbImg"), lbCount = document.getElementById("lbCount");
+  function show(i) {
+    cur = (i + n) % n;
+    lbImg.classList.remove("ready");
+    lbImg.onload = function () { lbImg.classList.add("ready"); };
+    lbImg.src = FULL[cur];
+    if (lbImg.complete && lbImg.naturalWidth) lbImg.classList.add("ready");
+    lbCount.textContent = (cur + 1) + " / " + n;
+    [cur + 1, cur - 1].forEach(function (k) { new Image().src = FULL[(k + n) % n]; });   // 앞뒤 미리 받기
   }
-  var strip = document.getElementById("thumbs"), ths = strip.querySelectorAll(".th");
-  function focusThumb(i) {                 // 현재 썸네일 강조 + 목록 가운데로
-    for (var k = 0; k < ths.length; k++) ths[k].classList.toggle("on", k === i);
-    var th = ths[i];
-    if (th) strip.scrollTo({ left: th.offsetLeft + th.offsetWidth / 2 - strip.clientWidth / 2, behavior: "smooth" });
-  }
-  strip.addEventListener("click", function (e) {
-    var b = e.target.closest ? e.target.closest(".th") : null;
-    if (b) go(+b.getAttribute("data-i"));
+  function openLb(i) { show(i); lb.classList.add("open"); document.body.classList.add("lbOpen"); }
+  function closeLb() { lb.classList.remove("open"); document.body.classList.remove("lbOpen"); }
+  grid.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest(".ph") : null;
+    if (b) openLb(Array.prototype.indexOf.call(phs, b));
   });
-  function sync(i) {                       // 현재 위치 기억 + 앞뒤 2장 미리 로드 + 썸네일 포커스
-    current = i;
-    focusThumb(i);
-    for (var k = -1; k <= 2; k++) load(i + k);
-  }
-  function index() { return Math.round(track.scrollLeft / track.clientWidth); }
-  function go(i) {
-    i = (i + n) % n;
-    sync(i);
-    track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
-  }
-  track.addEventListener("scroll", function () { sync(index()); }, { passive: true });
-  var px = 0, py = 0, pt = 0;
-  track.addEventListener("pointerdown", function (e) { px = e.clientX; py = e.clientY; pt = Date.now(); });
-  track.addEventListener("pointerup", function (e) {
-    if (Math.abs(e.clientX - px) > 8 || Math.abs(e.clientY - py) > 8 || Date.now() - pt > 400) return;
-    // 왼쪽 30% 탭은 이전, 나머지는 다음
-    go(current + (e.clientX - track.getBoundingClientRect().left < track.clientWidth * 0.3 ? -1 : 1));
+  var more = document.getElementById("more");
+  more.addEventListener("click", function () { grid.classList.remove("collapsed"); more.hidden = true; });
+  document.getElementById("lbClose").addEventListener("click", closeLb);
+  document.getElementById("lbPrev").addEventListener("click", function () { show(cur - 1); });
+  document.getElementById("lbNext").addEventListener("click", function () { show(cur + 1); });
+  lb.addEventListener("click", function (e) { if (e.target === lb) closeLb(); });   // 배경 탭 = 닫기
+  document.addEventListener("keydown", function (e) {
+    if (!lb.classList.contains("open")) return;
+    if (e.key === "Escape") closeLb();
+    else if (e.key === "ArrowRight") show(cur + 1);
+    else if (e.key === "ArrowLeft") show(cur - 1);
   });
-  sync(0);
+  // 좌우 스와이프로 넘기기
+  var sx = 0, sy = 0;
+  lb.addEventListener("touchstart", function (e) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  lb.addEventListener("touchend", function (e) {
+    var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) show(cur + (dx < 0 ? 1 : -1));
+  }, { passive: true });
 
   /* ── D-day ── */
   var today = new Date(); today.setHours(0, 0, 0, 0);

@@ -21,8 +21,10 @@ B = lambda n: os.path.join(SRC, f"KakaoTalk_20260909_204922384{n}.png")
 SOLO = os.path.join(SRC, "KakaoTalk_20260909_203158458.png")
 
 # 촬영 세트별로 묶은 갤러리 순서. (파일, 설명)
-# 슬라이드형이라 순서만 의미가 있고, 가로 사진은 object-fit:contain 으로 처리됩니다.
+# 그리드형: 첫 장은 4:3 대표, 나머지는 정사각 썸네일. 순서 = 그리드 순서 = 뷰어 순서.
 ORDER = [
+    # 첫 장 = 그리드 대표 (가로 4:3 전폭). 유일한 가로 컷.
+    (A("_12"), "화이트 스튜디오 - 드레스 전신"),          # ← 가로 사진
     # 검정 배경 스튜디오
     (A("_16"), "검정 배경 스튜디오 - 신부 정면"),
     (A("_15"), "검정 배경 스튜디오 - 신랑"),
@@ -31,7 +33,6 @@ ORDER = [
     (A("_05"), "화이트 스튜디오 - 거울 앞 두 사람"),
     (A("_03"), "화이트 스튜디오 - 케이크와 함께"),
     # 화이트 스튜디오 (레드 부케)
-    (A("_12"), "화이트 스튜디오 - 드레스 전신"),          # ← 가로 사진
     (os.path.join(SRC, "KakaoTalk_20260909_213739064.png"), "화이트 스튜디오 - 레드 부케"),   # _13 교체본 (상단 검은 줄 제거)
     (A("_14"), "화이트 홀 - 머메이드 드레스"),
     # 아이보리 수트 + 옐로 드레스
@@ -73,12 +74,18 @@ for i, (f, alt) in enumerate(ORDER, 1):
     total += nbytes
     wide = size[0] > size[1]
     manifest.append((name, alt, wide))
-    # 썸네일 목록용 정사각 크롭 (가운데 기준). 64px 표시 × 3배 DPR 여유
-    im = Image.open(os.path.join(OUT, name)); side = min(im.size)
-    sq = im.crop(((im.width - side) // 2, (im.height - side) // 2, (im.width + side) // 2, (im.height + side) // 2))
-    sq = sq.resize((192, 192), Image.LANCZOS)
-    sq.save(os.path.join(OUT, f"t{i:02d}.jpg"), "JPEG", quality=80, optimize=True)
+    # 그리드 썸네일: 정사각 400px (레퍼런스와 동일). 첫 장은 4:3 대표 1200x900 도 추가
+    src = Image.open(f).convert("RGB")
+    def _crop(im, ratio):
+        w, h = im.size
+        if w / h > ratio:
+            nw = round(h * ratio); x = (w - nw) // 2; return im.crop((x, 0, x + nw, h))
+        nh = round(w / ratio); y = (h - nh) // 2; return im.crop((0, y, w, y + nh))
+    _crop(src, 1).resize((400, 400), Image.LANCZOS).save(os.path.join(OUT, f"t{i:02d}.jpg"), "JPEG", quality=82, optimize=True)
     total += os.path.getsize(os.path.join(OUT, f"t{i:02d}.jpg"))
+    if i == 1:
+        _crop(src, 4 / 3).resize((1200, 900), Image.LANCZOS).save(os.path.join(OUT, "wide.jpg"), "JPEG", quality=84, optimize=True)
+        total += os.path.getsize(os.path.join(OUT, "wide.jpg"))
     print(f"{name}  {size[0]}x{size[1]:<5} {nbytes/1024:6.0f}KB  {'[가로]' if wide else ''}  {alt}")
 
 # 표지 (EXIF 회전 반영 후 크롭)
@@ -164,12 +171,8 @@ for n in ("map.png", "map-full.png"):
     print(f"{n:14} {im.width}x{im.height}  {sz/1024:.0f}KB")
 
 print(f"\n합계 {total/1e6:.2f} MB")
-print("\n-- index.html 슬라이드용 (처음 2장은 즉시, 나머지는 data-src 지연 로딩) --")
+print("-- index.html #grid 안에 (그리드 순서 = ORDER 순서) --")
 for i, (name, alt, wide) in enumerate(manifest):
-    cls = "slide contain" if wide else "slide"
-    src = f'src="assets/{name}"' if i < 2 else f'data-src="assets/{name}"'
-    print(f'<div class="{cls}"><img {src} alt="{alt}" draggable="false"></div>')
-print()
-print("-- 썸네일 목록 (#thumbs .row 안에) --")
-for i, (name, alt, wide) in enumerate(manifest):
-    print(f'<button class="th" type="button" data-i="{i}" aria-label="{i+1}번째 사진"><img src="assets/t{i+1:02d}.jpg" alt="" loading="lazy" draggable="false"></button>')
+    cls = "ph wide" if i == 0 else "ph"
+    src = "assets/wide.jpg" if i == 0 else f"assets/t{i+1:02d}.jpg"
+    print(f'<button class="{cls}" type="button" data-full="assets/{name}" aria-label="웨딩 사진 {i+1}번, 크게 보기"><img src="{src}" alt="" loading="lazy"></button>')
