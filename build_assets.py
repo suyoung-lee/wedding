@@ -7,7 +7,9 @@
 """
 
 import os
+import numpy as np
 from PIL import Image
+from scipy import ndimage
 import pypdfium2 as pdfium
 
 SRC = "imgs"
@@ -90,20 +92,63 @@ og.save(os.path.join(OUT, "og.jpg"), "JPEG", quality=86, optimize=True)
 total += os.path.getsize(os.path.join(OUT, "og.jpg"))
 print(f"og.jpg     1200x630  {os.path.getsize(os.path.join(OUT,'og.jpg'))/1024:.0f}KB")
 
-# 약도 PDF -> PNG (선이 얇아서 JPEG보다 PNG가 깔끔)
-#   map-full.png : 약도 전체. 페이지에서 탭하면 새 탭으로 열려 확대해 볼 수 있음.
-#   map.png      : 지도 다이어그램만 크롭. 페이지에 인라인으로 보여주는 용도.
-#                  (아래 교통편 텍스트는 이미지 대신 HTML로 넣어야 폰에서 읽힘)
+# ── 약도 ────────────────────────────────────────────────────────────
+# 업체 PDF의 아래쪽 교통편 텍스트 블록은 잘라냅니다. 폰에서 축소되면 못 읽고,
+# 같은 내용을 index.html 에 HTML 텍스트로 넣어두었습니다.
+#   map-full.png : 다이어그램 고해상도. 탭하면 새 탭에서 크게.
+#   map.png      : 같은 그림 축소본. 페이지에 인라인 표시.
 page = pdfium.PdfDocument(MAP_PDF)[0]
 w_pt, h_pt = page.get_size()
-full = Image.fromarray(page.render(scale=1800 / w_pt).to_numpy()).convert("RGB")
-full.save(os.path.join(OUT, "map-full.png"), "PNG", optimize=True)
+full = Image.fromarray(page.render(scale=3000 / w_pt).to_numpy()).convert("RGB")
 
-# 다이어그램 영역 (원본 대비 비율로 지정 — PDF가 바뀌면 여기만 조정)
+# 다이어그램 영역 (원본 대비 비율 — PDF가 바뀌면 여기만 조정)
 cl, ct, cr, cb = 0.072, 0.163, 0.928, 0.628
 crop = full.crop((int(cl * full.width), int(ct * full.height),
                   int(cr * full.width), int(cb * full.height)))
-crop.save(os.path.join(OUT, "map.png"), "PNG", optimize=True)
+
+# 신분당선을 실제 노선색(빨강)으로 정정.
+# 업체 약도는 신분당선을 남색으로 그렸는데, 그 남색은 도보 경로선·핀·
+# "세인트 메리엘" 글자에도 함께 쓰입니다. 그래서 색으로만 고르면 지도가 통째로
+# 빨개집니다. 남색 영역을 연결 요소로 나눈 뒤 "가장 큰 덩어리"(= 역 막대 + ④번
+# 출구 표시)만 칠합니다.
+SHINBUNDANG = (165, 17, 47)      # #A5112F — 후보 4종을 비교해 고른 값
+NAVY_R = 51                      # 원본 남색 #3331b7 의 R 채널
+
+ca = np.array(crop).astype(int)
+navy = ((ca[:, :, 2] > ca[:, :, 0] + 25) &
+        (ca[:, :, 2] > ca[:, :, 1] + 25) &
+        (ca[:, :, 2] > 90))
+lab, ncomp = ndimage.label(navy, structure=np.ones((3, 3)))
+sizes = ndimage.sum(navy, lab, range(1, ncomp + 1))
+main = int(np.argmax(sizes)) + 1
+bar = (lab == main)
+
+# 엉뚱한 덩어리를 칠하지 않도록 검증 — 세로로 길고 왼쪽에 있어야 합니다.
+ys, xs = np.nonzero(bar)
+h, w = bar.shape
+assert bar.sum() > navy.sum() * 0.5,        "신분당선 막대를 못 찾았습니다"
+assert (ys.max() - ys.min()) > h * 0.4,     "찾은 덩어리가 세로로 길지 않습니다"
+assert xs.max() < w * 0.3,                  "찾은 덩어리가 지도 왼쪽에 있지 않습니다"
+
+# ④ 원 안의 숫자처럼 링에 닿지 않아 따로 떨어진 조각도 같이 칠합니다.
+# (안 하면 링만 빨갛고 숫자는 남색으로 남습니다)
+y0, y1, x0, x1 = ys.min(), ys.max(), xs.min(), xs.max()
+for cid, sl in enumerate(ndimage.find_objects(lab), start=1):
+    if cid == main or sl is None:
+        continue
+    if sl[0].start >= y0 and sl[0].stop <= y1 + 1 and sl[1].start >= x0 and sl[1].stop <= x1 + 1:
+        bar |= (lab == cid)
+
+# 안티에일리어싱 보존: 흰 배경 위 남색의 투명도를 구해 같은 투명도로 빨강을 올림
+alpha = np.clip((255 - ca[:, :, 0]) / (255 - NAVY_R), 0, 1)[..., None]
+recolored = np.array(crop).astype(float)
+recolored[bar] = ((1 - alpha) * 255 + alpha * np.array(SHINBUNDANG))[bar]
+crop = Image.fromarray(recolored.round().astype(np.uint8))
+
+crop.save(os.path.join(OUT, "map-full.png"), "PNG", optimize=True)
+small = crop.resize((1540, round(crop.height * 1540 / crop.width)), Image.LANCZOS)
+small.save(os.path.join(OUT, "map.png"), "PNG", optimize=True)
+print("  신분당선 정정: {}px -> #{:02X}{:02X}{:02X}".format(int(bar.sum()), *SHINBUNDANG))
 
 for n in ("map.png", "map-full.png"):
     sz = os.path.getsize(os.path.join(OUT, n))
