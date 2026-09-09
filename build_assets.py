@@ -21,14 +21,10 @@ B = lambda n: os.path.join(SRC, f"KakaoTalk_20260909_204922384{n}.png")
 SOLO = os.path.join(SRC, "KakaoTalk_20260909_203158458.png")
 
 # 촬영 세트별로 묶은 갤러리 순서. (파일, 설명)
-#
-# 가로 사진의 위치 주의: 2열 격자에서 가로 사진은 2칸을 차지하므로,
-# 앞에 오는 세로 사진 개수가 짝수여야 빈칸 없이 채워집니다.
-# 지금은 6장 뒤(7번)에 두어 정확히 맞습니다. 순서를 바꾸면 이 조건을 다시 확인하세요.
+# 슬라이드형이라 순서만 의미가 있고, 가로 사진은 object-fit:contain 으로 처리됩니다.
 ORDER = [
     # 검정 배경 스튜디오
     (A("_16"), "검정 배경 스튜디오 - 신부 정면"),
-    (A(""),    "검정 배경 스튜디오 - 신부 측면"),
     (A("_15"), "검정 배경 스튜디오 - 신랑"),
     # 화이트 스튜디오 (거울 / 케이크)
     (A("_04"), "화이트 스튜디오 - 거울 앞 신부"),
@@ -157,6 +153,8 @@ for n in ("map.png", "map-full.png"):
     print(f"{n:14} {im.width}x{im.height}  {sz/1024:.0f}KB")
 
 print(f"\n합계 {total/1e6:.2f} MB")
-print("\n-- index.html 갤러리용 --")
-for name, alt, wide in manifest:
-    print(f'<div class="{"cell wide" if wide else "cell"}"><img src="assets/{name}" alt="{alt}" loading="lazy" draggable="false"></div>')
+print("\n-- index.html 슬라이드용 (처음 2장은 즉시, 나머지는 data-src 지연 로딩) --")
+for i, (name, alt, wide) in enumerate(manifest):
+    cls = "slide contain" if wide else "slide"
+    src = f'src="assets/{name}"' if i < 2 else f'data-src="assets/{name}"'
+    print(f'<div class="{cls}"><img {src} alt="{alt}" draggable="false"></div>')
