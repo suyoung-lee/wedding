@@ -51,7 +51,8 @@ ORDER = [
     (A("_08"), "가든 - 신부"),
 ]
 
-COVER = B("_02")          # 표지 — 아이보리 수트 미소 컷 (글자 얹기에 가장 적합, 신부측 "캐쥬얼" 의견 반영)
+COVER = os.path.join(SRC, "_WEL0503.jpg")   # 표지 — 얼굴 가린 아치 컷 (원본, 아래 COVER_CROP 으로 폰 비율에 맞게 크롭)
+COVER_CROP = (0.12, 0.0, 0.88, 1.0)          # (좌, 상, 우, 하) 비율. 좌우 기둥만 살짝 잘라 세로는 전부 유지
 MAP_PDF = os.path.join(SRC, "[세인트 메리엘] 청첩장 약도 (1).pdf")
 
 
@@ -74,14 +75,18 @@ for i, (f, alt) in enumerate(ORDER, 1):
     manifest.append((name, alt, wide))
     print(f"{name}  {size[0]}x{size[1]:<5} {nbytes/1024:6.0f}KB  {'[가로]' if wide else ''}  {alt}")
 
-# 표지
-size, nbytes = save_jpg(Image.open(COVER), os.path.join(OUT, "cover.jpg"), 1000, 86)
+# 표지 (EXIF 회전 반영 후 크롭)
+from PIL import ImageOps
+_c = ImageOps.exif_transpose(Image.open(COVER))
+_l, _t, _r, _b = COVER_CROP
+_c = _c.crop((int(_l*_c.width), int(_t*_c.height), int(_r*_c.width), int(_b*_c.height)))
+size, nbytes = save_jpg(_c, os.path.join(OUT, "cover.jpg"), 1100, 86)
 total += nbytes
 print(f"cover.jpg  {size[0]}x{size[1]}  {nbytes/1024:.0f}KB")
 
 # 카카오톡 공유 미리보기 (1200x630, 사진을 크림색 배경에 레터박스)
 og = Image.new("RGB", (1200, 630), "#fbfaf7")
-c = Image.open(COVER).convert("RGB")
+c = _c.convert("RGB")
 c.thumbnail((630, 630), Image.LANCZOS)
 og.paste(c, ((1200 - c.width) // 2, (630 - c.height) // 2))
 og.save(os.path.join(OUT, "og.jpg"), "JPEG", quality=86, optimize=True)
