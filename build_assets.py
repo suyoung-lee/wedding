@@ -73,6 +73,12 @@ for i, (f, alt) in enumerate(ORDER, 1):
     total += nbytes
     wide = size[0] > size[1]
     manifest.append((name, alt, wide))
+    # 썸네일 목록용 정사각 크롭 (가운데 기준). 64px 표시 × 3배 DPR 여유
+    im = Image.open(os.path.join(OUT, name)); side = min(im.size)
+    sq = im.crop(((im.width - side) // 2, (im.height - side) // 2, (im.width + side) // 2, (im.height + side) // 2))
+    sq = sq.resize((192, 192), Image.LANCZOS)
+    sq.save(os.path.join(OUT, f"t{i:02d}.jpg"), "JPEG", quality=80, optimize=True)
+    total += os.path.getsize(os.path.join(OUT, f"t{i:02d}.jpg"))
     print(f"{name}  {size[0]}x{size[1]:<5} {nbytes/1024:6.0f}KB  {'[가로]' if wide else ''}  {alt}")
 
 # 표지 (EXIF 회전 반영 후 크롭)
@@ -163,3 +169,7 @@ for i, (name, alt, wide) in enumerate(manifest):
     cls = "slide contain" if wide else "slide"
     src = f'src="assets/{name}"' if i < 2 else f'data-src="assets/{name}"'
     print(f'<div class="{cls}"><img {src} alt="{alt}" draggable="false"></div>')
+print()
+print("-- 썸네일 목록 (#thumbs .row 안에) --")
+for i, (name, alt, wide) in enumerate(manifest):
+    print(f'<button class="th" type="button" data-i="{i}" aria-label="{i+1}번째 사진"><img src="assets/t{i+1:02d}.jpg" alt="" loading="lazy" draggable="false"></button>')
