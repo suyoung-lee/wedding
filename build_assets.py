@@ -52,8 +52,8 @@ ORDER = [
     (A("_08"), "가든 - 신부"),
 ]
 
-COVER = os.path.join(SRC, "_WEL0503.jpg")   # 표지 — 얼굴 가린 아치 컷 (원본, 아래 COVER_CROP 으로 폰 비율에 맞게 크롭)
-COVER_CROP = (0.12, 0.0, 0.88, 1.0)          # (좌, 상, 우, 하) 비율. 좌우 기둥만 살짝 잘라 세로는 전부 유지
+COVER = os.path.join(SRC, "KakaoTalk_20260909_232050635.png")   # 표지 — 아치 컷 보정본 (신부측 추천)
+COVER_CROP = (0.08, 0.0, 0.92, 1.0)          # (좌, 상, 우, 하) 비율. 보정본은 이미 타이트해서 좌우만 살짝
 MAP_PDF = os.path.join(SRC, "[세인트 메리엘] 청첩장 약도 (1).pdf")
 
 
