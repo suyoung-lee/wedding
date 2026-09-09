@@ -103,10 +103,10 @@
   .cover .frame{position:absolute;inset:14px;border:1px solid rgba(43,40,35,.28);pointer-events:none}
   .cover .caption{
     position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;
-    gap:14px;padding:12vh 32px 0;
+    gap:14px;padding:calc(12vh + 34px) 32px 0;   /* 아치와 너무 가깝지 않게 한 줄 높이만큼 아래로 */
   }
   .cover h1{font-size:28px;line-height:1.2;letter-spacing:.14em;color:var(--ink)}
-  .cover .amp{font-family:var(--serif);font-size:15px;line-height:1;color:var(--accent)}
+  .cover .amp{font-family:var(--serif);font-size:15px;line-height:1;color:var(--accent);margin:-1px 0 1px}   /* 잉크 기준 위아래 간격 보정 */
   .cover .bottom{
     position:absolute;left:0;right:0;bottom:30px;padding:0 24px;
     display:flex;flex-direction:column;align-items:center;gap:20px;
@@ -121,11 +121,15 @@
   .greeting p + p{margin-top:16px}
 
   /* ── 혼주 ───────────────────────────────────────────────── */
-  .fam{display:flex;flex-direction:column;gap:10px;margin:8px 0 26px}
-  .fam p{display:flex;justify-content:center;align-items:baseline;gap:6px;white-space:nowrap}
-  .fam .p{font-size:14.5px;color:var(--ink-2)}
+  /* 두 줄이 열(부모 | 관계 | 이름)을 공유하는 grid — 이름 시작점이 같은 x 에 정렬됨 */
+  .fam{
+    display:grid;grid-template-columns:auto auto auto;justify-content:center;align-items:baseline;
+    column-gap:6px;row-gap:10px;margin:8px 0 26px;white-space:nowrap;
+  }
+  .fam p{display:contents}
+  .fam .p{font-size:14.5px;color:var(--ink-2);text-align:right}
   .fam .rel{font-size:12.5px;color:var(--ink-3);margin-right:4px}
-  .fam .n{font-family:var(--serif);font-size:17.5px;color:var(--ink);letter-spacing:.02em}
+  .fam .n{font-family:var(--serif);font-size:17.5px;color:var(--ink);letter-spacing:.02em;text-align:left}
 
   /* ── 예식 일시 / 달력 ────────────────────────────────────── */
   .when h2{font-size:22px;letter-spacing:.04em}
