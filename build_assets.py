@@ -18,8 +18,8 @@ OUT = "assets"
 # index.html 의 이미지 URL 뒤 ?v=N 캐시 버전. 파일명을 그대로 두고 사진 내용만
 # 바꾸면 이미 청첩장을 열어본 브라우저가 캐시된 옛 사진을 계속 보여줍니다
 # (썸네일만 바뀌고 뷰어는 옛 사진이 뜨는 식). 사진을 갈아끼울 때마다 올리세요.
-#   sed -i '' 's/?v=[0-9]*/?v=17/g' index.html
-ASSET_V = 16
+#   sed -i '' 's/?v=[0-9]*/?v=18/g' index.html
+ASSET_V = 17
 os.makedirs(OUT, exist_ok=True)
 
 A = lambda n: os.path.join(SRC, f"KakaoTalk_20260909_203020487{n}.png")
@@ -33,7 +33,7 @@ N = lambda n: os.path.join(SRC, f"{n}.png")
 # 검정 배경 컷은 톤이 확 달라서 맨 뒤로 뺐습니다.
 ORDER = [
     # 첫 장 = 그리드 대표 (가로 4:3 전폭). 유일한 가로 컷.
-    (A("_12"), "화이트 스튜디오 - 드레스 전신"),          # ← 가로 사진
+    (N("Q_드레스전신_가로"), "화이트 스튜디오 - 드레스 전신"),   # ← 유일한 가로 사진
     # 화이트 스튜디오 (거울)
     (A("_04"), "화이트 스튜디오 - 거울 앞 신부"),
     (N("B_거울앞신랑"),   "화이트 스튜디오 - 거울 앞 신랑"),
@@ -72,7 +72,7 @@ ORDER = [
 #    잘린 뒤라 좌표가 다릅니다. 아래 to_portrait 가 정규화 후 좌표로 알아서 바꿉니다.
 #   재측정: swift tools/faces.swift imgs/*.png
 FACE = [
-    (0.569, 0.213),   #  1 드레스 전신
+    (0.567, 0.214),   #  1 드레스 전신 (가로)
     (0.259, 0.236),   #  2 거울 앞 신부
     (0.522, 0.193),   #  3 거울 앞 신랑      (거울 속 반영 + 실제 인물 둘 다 인식됨)
     (0.342, 0.221),   #  4 거울 앞 두 사람
@@ -150,11 +150,13 @@ for i, (f, alt) in enumerate(ORDER, 1):
     fx, fy = FACE[i - 1]
     if src.height > src.width:                      # 세로 사진만 비율을 맞춥니다
         src, (fx, fy) = to_portrait(src, fx, fy, recenter=i not in NO_RECENTER)
-    size, nbytes = save_jpg(src, os.path.join(OUT, name), 900)
+    # 첫 장(가로 대표)은 그리드에서 전폭으로 깔리고 뷰어에서도 가장 크게
+    # 보여서, 900px 로는 고해상도 폰에서 흐릿합니다. 이 장만 넉넉하게.
+    size, nbytes = save_jpg(src, os.path.join(OUT, name), 1400 if i == 1 else 900)
     total += nbytes
     wide = size[0] > size[1]
     manifest.append((name, alt, wide))
-    # 그리드 썸네일: 정사각 400px (레퍼런스와 동일). 첫 장은 4:3 대표 1200x900 도 추가
+    # 그리드 썸네일: 정사각 400px (레퍼런스와 동일). 첫 장은 4:3 대표 1600x1200 도 추가
     # (fx, fy 는 위에서 정규화 후 좌표로 갱신된 값)
     def _crop(im, ratio):
         """얼굴이 가운데(세로는 위 1/3) 오도록 ratio 비율로 잘라냅니다."""
@@ -166,7 +168,7 @@ for i, (f, alt) in enumerate(ORDER, 1):
     _crop(src, 1).resize((400, 400), Image.LANCZOS).save(os.path.join(OUT, f"t{i:02d}.jpg"), "JPEG", quality=82, optimize=True)
     total += os.path.getsize(os.path.join(OUT, f"t{i:02d}.jpg"))
     if i == 1:
-        _crop(src, 4 / 3).resize((1200, 900), Image.LANCZOS).save(os.path.join(OUT, "wide.jpg"), "JPEG", quality=84, optimize=True)
+        _crop(src, 4 / 3).resize((1600, 1200), Image.LANCZOS).save(os.path.join(OUT, "wide.jpg"), "JPEG", quality=84, optimize=True)
         total += os.path.getsize(os.path.join(OUT, "wide.jpg"))
     print(f"{name}  {size[0]}x{size[1]:<5} {nbytes/1024:6.0f}KB  {'[가로]' if wide else ''}  {alt}")
 
