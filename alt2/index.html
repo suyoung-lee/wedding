@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <!-- maximum-scale/user-scalable: 사진 확대 방지. iOS는 이걸 무시하므로 하단 스크립트에서 제스처를 직접 막습니다. -->
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>이수영 ♥ 이정은 결혼합니다 (배치안 C)</title>
+<title>이수영 ♥ 이정은 결혼합니다 (표지 전환안 C)</title>
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="이수영 ♥ 이정은 결혼합니다">
 <meta property="og:description" content="2026년 12월 12일 토요일 오후 4시, 세인트메리엘 1층 메리엘홀">
 <meta property="og:url" content="https://suyoung-lee.github.io/wedding/">
-<meta property="og:image" content="https://suyoung-lee.github.io/wedding/assets/og.jpg?v=20">
+<meta property="og:image" content="https://suyoung-lee.github.io/wedding/assets/og.jpg?v=21">
 <meta name="description" content="2026년 12월 12일 토요일 오후 4시, 세인트메리엘 1층 메리엘홀">
 <meta name="robots" content="noindex, nofollow">   <!-- 비교용 미리보기 -->
 <meta name="theme-color" content="#fbfaf7">
@@ -95,8 +95,7 @@
   }
   .cover .photo{position:absolute;inset:0}
   /* 표지 사진 두 장을 같은 자리에 겹쳐 둡니다. 위에 얹은 .veil(꽃으로 가린 컷)의
-     투명도를 스크롤에 따라 내려서, 얼굴이 드러나는 것처럼 보이게 합니다.
-     얼굴이 화면 위로 사라지기 한참 전에 전환이 끝나도록 구간을 잡습니다. */
+     투명도를 스크롤에 따라 내려서, 얼굴이 드러나는 것처럼 보이게 합니다. */
   .cover .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%}
   .cover .photo .veil{will-change:opacity}
   /* 밝은 아치 사진이라 어둡게 누르지 않고, 위쪽 흰 벽에 잉크색 글자를 얹습니다 */
@@ -288,9 +287,9 @@
   <!-- ══════════ 표지 ══════════ -->
   <header class="cover">
     <div class="photo noSave">
-      <!-- 아래: 얼굴이 보이는 컷. 위: 꽃으로 가린 컷 — 스크롤하면 걷힙니다. -->
-      <img src="assets/cover-b.jpg?v=20" alt="신랑 이수영, 신부 이정은" draggable="false">
-      <img class="veil" src="../assets/cover.jpg?v=20" alt="" aria-hidden="true" draggable="false">
+      <!-- 아래: 얼굴이 보이는 컷(현재 메인 표지). 위: 꽃으로 가린 컷 — 스크롤하면 걷힙니다. -->
+      <img src="../assets/cover.jpg?v=21" alt="신랑 이수영, 신부 이정은" draggable="false">
+      <img class="veil" src="assets/cover-a.jpg?v=21" alt="" aria-hidden="true" draggable="false">
     </div>
     <div class="fade"></div>
     <div class="frame"></div>
@@ -361,25 +360,25 @@
   <section>
     <p class="label">Gallery</p>
     <div class="grid collapsed noSave" id="grid">
-      <button class="ph wide" type="button" data-full="../assets/g01.jpg?v=20" aria-label="웨딩 사진 1번, 크게 보기"><img src="../assets/wide.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g02.jpg?v=20" aria-label="웨딩 사진 2번, 크게 보기"><img src="../assets/t02.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g03.jpg?v=20" aria-label="웨딩 사진 3번, 크게 보기"><img src="../assets/t03.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g04.jpg?v=20" aria-label="웨딩 사진 4번, 크게 보기"><img src="../assets/t04.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g07.jpg?v=20" aria-label="웨딩 사진 5번, 크게 보기"><img src="../assets/t07.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g06.jpg?v=20" aria-label="웨딩 사진 6번, 크게 보기"><img src="../assets/t06.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g08.jpg?v=20" aria-label="웨딩 사진 7번, 크게 보기"><img src="../assets/t08.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="assets/g08.jpg?v=20" aria-label="웨딩 사진 8번, 크게 보기"><img src="assets/t08.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g09.jpg?v=20" aria-label="웨딩 사진 9번, 크게 보기"><img src="../assets/t09.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g10.jpg?v=20" aria-label="웨딩 사진 10번, 크게 보기"><img src="../assets/t10.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g11.jpg?v=20" aria-label="웨딩 사진 11번, 크게 보기"><img src="../assets/t11.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g12.jpg?v=20" aria-label="웨딩 사진 12번, 크게 보기"><img src="../assets/t12.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g13.jpg?v=20" aria-label="웨딩 사진 13번, 크게 보기"><img src="../assets/t13.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g14.jpg?v=20" aria-label="웨딩 사진 14번, 크게 보기"><img src="../assets/t14.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g15.jpg?v=20" aria-label="웨딩 사진 15번, 크게 보기"><img src="../assets/t15.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g16.jpg?v=20" aria-label="웨딩 사진 16번, 크게 보기"><img src="../assets/t16.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g17.jpg?v=20" aria-label="웨딩 사진 17번, 크게 보기"><img src="../assets/t17.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g18.jpg?v=20" aria-label="웨딩 사진 18번, 크게 보기"><img src="../assets/t18.jpg?v=20" alt="" loading="lazy"></button>
-      <button class="ph" type="button" data-full="../assets/g19.jpg?v=20" aria-label="웨딩 사진 19번, 크게 보기"><img src="../assets/t19.jpg?v=20" alt="" loading="lazy"></button>
+      <button class="ph wide" type="button" data-full="../assets/g01.jpg?v=21" aria-label="웨딩 사진 1번, 크게 보기"><img src="../assets/wide.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g02.jpg?v=21" aria-label="웨딩 사진 2번, 크게 보기"><img src="../assets/t02.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g03.jpg?v=21" aria-label="웨딩 사진 3번, 크게 보기"><img src="../assets/t03.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g04.jpg?v=21" aria-label="웨딩 사진 4번, 크게 보기"><img src="../assets/t04.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g05.jpg?v=21" aria-label="웨딩 사진 5번, 크게 보기"><img src="../assets/t05.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g06.jpg?v=21" aria-label="웨딩 사진 6번, 크게 보기"><img src="../assets/t06.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g07.jpg?v=21" aria-label="웨딩 사진 7번, 크게 보기"><img src="../assets/t07.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g08.jpg?v=21" aria-label="웨딩 사진 8번, 크게 보기"><img src="../assets/t08.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g09.jpg?v=21" aria-label="웨딩 사진 9번, 크게 보기"><img src="../assets/t09.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g10.jpg?v=21" aria-label="웨딩 사진 10번, 크게 보기"><img src="../assets/t10.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g11.jpg?v=21" aria-label="웨딩 사진 11번, 크게 보기"><img src="../assets/t11.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g12.jpg?v=21" aria-label="웨딩 사진 12번, 크게 보기"><img src="../assets/t12.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g13.jpg?v=21" aria-label="웨딩 사진 13번, 크게 보기"><img src="../assets/t13.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g14.jpg?v=21" aria-label="웨딩 사진 14번, 크게 보기"><img src="../assets/t14.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g15.jpg?v=21" aria-label="웨딩 사진 15번, 크게 보기"><img src="../assets/t15.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g16.jpg?v=21" aria-label="웨딩 사진 16번, 크게 보기"><img src="../assets/t16.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g17.jpg?v=21" aria-label="웨딩 사진 17번, 크게 보기"><img src="../assets/t17.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g18.jpg?v=21" aria-label="웨딩 사진 18번, 크게 보기"><img src="../assets/t18.jpg?v=21" alt="" loading="lazy"></button>
+      <button class="ph" type="button" data-full="../assets/g19.jpg?v=21" aria-label="웨딩 사진 19번, 크게 보기"><img src="../assets/t19.jpg?v=21" alt="" loading="lazy"></button>
     </div>
     <button class="more" type="button" id="more">사진 더보기<span class="chev" aria-hidden="true"></span></button>
   </section>
@@ -392,8 +391,8 @@
     <h2>세인트메리엘</h2>
     <p class="sub">1층 메리엘홀</p>
 
-    <a class="mapWrap noSave" href="../assets/map-full.png?v=20" target="_blank" rel="noopener">
-      <img src="../assets/map.png?v=20" alt="세인트메리엘 약도" loading="lazy" draggable="false">
+    <a class="mapWrap noSave" href="../assets/map-full.png?v=21" target="_blank" rel="noopener">
+      <img src="../assets/map.png?v=21" alt="세인트메리엘 약도" loading="lazy" draggable="false">
     </a>
     <p class="mapHint">약도를 누르면 크게 볼 수 있습니다</p>
 
@@ -638,8 +637,8 @@
 
     /* 얼굴은 표지 높이의 약 45% 지점에 있습니다. 시차로 사진이 0.22 배만
        따라오니, 얼굴이 화면 위로 사라지는 스크롤량은 0.45*H / (1-0.22).
-       그 60% 지점에서 전환이 끝나게 해서, 얼굴이 보이는 동안 충분히
-       드러나도록 합니다. (820px 표지 기준 281px 쯤) */
+       그 60% 지점에서 전환이 끝나게 해서, 드러난 얼굴을 충분히 보고
+       지나가도록 합니다. (표지 820px 기준 281px 쯤) */
     function measure() {
       coverH = cover.offsetHeight;
       fadeEnd = Math.max(120, 0.6 * 0.45 * coverH / 0.78);
