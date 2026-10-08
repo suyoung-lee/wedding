@@ -117,3 +117,19 @@ public 레포라서 원본을 커밋하면 원본 해상도가 URL로 공개되�
 옛 사진을 계속 보여줍니다. `index.html` 의 `?v=` 를 올리세요.
 
     sed -i '' 's/?v=[0-9]*/?v=22/g' index.html alt/index.html alt2/index.html
+
+## 파비콘
+
+| 파일 | 쓰임 | 크롭 |
+|---|---|---|
+| `assets/favicon-16.png`, `-32.png` | 브라우저 탭 | 반지 중심 (투명) |
+| `assets/apple-touch-icon.png` | iOS 홈화면 180px | 그림 전체 + 크림 배경 |
+
+탭 아이콘은 16~32px 라 그림 전체를 넣으면 뭉개집니다. 작은 크기는 반지만
+크게 잡고, 홈화면용은 그림 전체를 씁니다. iOS 는 홈화면 아이콘의 투명을
+검정으로 칠하므로 apple-touch-icon 에는 페이지 배경색(#fbfaf7)을 깔았습니다.
+
+원본은 `imgs/FAVICON_웨딩링.png` (1254x1254 RGBA, gitignore 라 커밋 안 됨).
+크기를 다시 뽑으려면 tools 없이도 아래로 충분합니다.
+
+    sips -Z 32 imgs/FAVICON_웨딩링.png --out assets/favicon-32.png
